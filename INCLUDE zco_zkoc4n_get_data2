@@ -1,0 +1,565 @@
+*&---------------------------------------------------------------------*
+*& Include          ZCO_ZKOC4N_GET_DATA2
+*&---------------------------------------------------------------------*
+
+form get_data.
+
+*----------------------------------------------------------
+  clear itab.
+  select rbukrs, gjahr, aufnr , rhcur
+    from acdoca
+    into corresponding fields of table @itab
+    where rldnr = '0L'
+    and aufnr <> ''
+    and autyp = '10'          "Order category: PP
+    and kokrs  in @s_kokrs
+    and rbukrs in @s_rbukrs
+    and gjahr  in @s_gjahr
+    and poper  in @s_poper
+    and aufnr  in @s_aufnr
+    group by rbukrs, gjahr, aufnr, rhcur.
+
+
+  if sy-subrc = 0.
+    sort itab by kokrs rbukrs gjahr aufnr.
+  else.
+
+  endif.
+
+endform.
+*-------------------------------------------------------------------------
+form get_data_period.
+
+  clear itab.
+  select rbukrs, gjahr, poper, aufnr , rhcur
+    from acdoca
+    into corresponding fields of table @itab
+    where rldnr = '0L'
+    and aufnr  <> ''
+    and autyp  = '10'          "Order category: PP
+    and kokrs  in @s_kokrs
+    and rbukrs in @s_rbukrs
+    and gjahr  in @s_gjahr
+    and poper  in @s_poper
+    and aufnr  in @s_aufnr
+    group by rbukrs, gjahr, poper, aufnr, rhcur.
+
+
+  if sy-subrc = 0.
+    sort itab by kokrs rbukrs gjahr aufnr poper .
+  else.
+  endif.
+
+endform.
+
+
+form after_query .
+
+*-------------------------------------------------General data
+
+  loop at itab assigning field-symbol(<f>).
+    select single af~matnr, mk~maktx, mr~zmaktx_fa, mr~meins, af~amein, af~wemng,
+                  af~dauat, af~psmng, af~dwerk, tw~bwkey, mb~stprs, mb~bklas, mb~vmvpr
+      from afpo as af
+      left join makt  as mk on af~matnr eq mk~matnr and mk~spras eq 'E'
+      left join mara  as mr on af~matnr eq mr~matnr
+      left join t001w as tw on tw~werks eq af~dwerk
+      left join mbew  as mb on mb~matnr eq af~matnr and mb~bwkey eq tw~bwkey
+      into ( @<f>-matnr, @<f>-maktx, @<f>-zmaktx_fa, @<f>-meins, @<f>-amein, @<f>-wemng,
+             @<f>-dauat, @<f>-psmng, @<f>-dwerk, @<f>-bwkey , @<f>-stprs, @<f>-bklas, @<f>-vmvpr )
+      where af~aufnr = @<f>-aufnr.
+
+  endloop.
+
+*-------------------------------------------------Prod amount
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as prod_amount
+      from acdoca as acd
+      into @<f>-prod_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  in @s_poper
+          and aufnr  =  @<f>-aufnr
+          and blart  in ( 'WA', 'WE' )    "Document Type
+          and ktosl = 'GBB'    "Transaction
+          and co_belkz = 'L'.  "Dr/Cr Ind. CO
+  endloop.
+
+*-------------------------------------------------Confirm amount
+
+*  loop at itab assigning <f>.
+*
+*    call function 'ZCO_FUNCTION_03'
+*      exporting
+*        p_aufnr       = <f>-aufnr
+*        s_rbukrs      = <f>-rbukrs
+*        s_gjahr       = <f>-gjahr
+*      importing
+*        confirm_amt   = <f>-confirm_amt
+*      tables
+*        s_poper       = s_poper
+*      exceptions
+*        no_data_exist = 1
+*        others        = 2.
+*    if sy-subrc <> 0.
+** Implement suitable error handling here
+*    endif.
+*
+*  endloop.
+*-------------------------------------------------Janebi
+
+  loop at itab assigning <f>.
+
+
+    select single sum( acd~hsl ) as janebi
+      from acdoca as acd
+      into @<f>-janebi
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  in @s_poper
+          and aufnr = @<f>-aufnr
+          and blart in ( 'WA', 'WE' )    "Document Type
+          and ktosl = 'GBB'     "Transaction
+          and co_belkz = 'S'   "Dr/Cr Ind. CO
+          and racct between '8000000000' and '8999999999'.
+
+  endloop.
+
+*-------------------------------------------------Raw Material
+
+  loop at itab assigning <f>.
+
+
+    select single sum( acd~hsl ) as raw_amount
+      from acdoca as acd
+      into @<f>-raw_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  in @s_poper
+          and aufnr = @<f>-aufnr
+          and blart in ( 'WA', 'WE' )    "Document Type
+          and ktosl = 'GBB'     "Transaction
+          and co_belkz = 'S'   "Dr/Cr Ind. CO
+          and racct between '7000000000' and '7999999999'.
+
+  endloop.
+
+*-------------------------------------------------DLABOR
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as dl_amount
+      from acdoca as acd
+      into @<f>-dl_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  in @s_poper
+          and aufnr = @<f>-aufnr
+          and blart = 'CO'      "Document Type
+          and ktosl = 'CO1'     " Transaction
+          and ulstar = 'DLABOR'.
+
+  endloop.
+
+*-------------------------------------------------DOVERH
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as doh_amount
+      from acdoca as acd
+      into @<f>-doh_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  in @s_poper
+          and aufnr = @<f>-aufnr
+          and blart = 'CO'      "Document Type
+          and ktosl = 'CO1'     " Transaction
+          and ulstar = 'DOVERH'.
+
+  endloop.
+
+*-------------------------------------------------AMORTI
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as am_amount
+      from acdoca as acd
+      into @<f>-am_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  in @s_poper
+          and aufnr = @<f>-aufnr
+          and blart = 'CO'      "Document Type
+          and ktosl = 'CO1'     " Transaction
+          and ulstar = 'AMORTI'.
+
+  endloop.
+
+*-------------------------------------------------ENERGY
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as en_amount
+      from acdoca as acd
+      into @<f>-en_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  in @s_poper
+          and aufnr = @<f>-aufnr
+          and blart = 'CO'      "Document Type
+          and ktosl = 'CO1'     " Transaction
+          and ulstar = 'ENERGY'.
+
+
+  endloop.
+
+*-------------------------------------------------ILABOR
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as il_amount
+      from acdoca as acd
+      into @<f>-il_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  in @s_poper
+          and aufnr = @<f>-aufnr
+          and blart = 'CO'      "Document Type
+          and ktosl = 'CO1'     " Transaction
+          and ulstar = 'ILABOR'.
+
+  endloop.
+
+*-------------------------------------------------IOVERH
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as ioh_amount
+      from acdoca as acd
+      into @<f>-ioh_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  in @s_poper
+          and aufnr = @<f>-aufnr
+          and blart = 'CO'      "Document Type
+          and ktosl = 'CO1'     " Transaction
+          and ulstar = 'IOVERH'.
+
+
+  endloop.
+*------------------------------------------------- انتقالب از اوردر به اوردر
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as enteghalli
+      from acdoca as acd
+      into @<f>-enteghalli
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  in @s_poper
+          and aufnr = @<f>-aufnr
+          and blart  = 'CO'      "Document Type
+          and ktosl  = 'CO1'     " Transaction
+          and co_belkz in ( 'A' , 'S' )   "Dr/Cr Ind. CO
+          and PACCASTY = 'OR' .           "Partner Object Type
+
+  endloop.
+
+
+*-------------------------------------------------ST_AMOUNT
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as st_amount
+      from acdoca as acd
+      into @<f>-st_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  in @s_poper
+          and aufnr = @<f>-aufnr
+          and blart = 'ST'      "Document Type
+          and ktosl = 'GBB' .   " Transaction
+
+
+  endloop.
+
+*-------------------------------------------------TOTAL_AMOUNT
+
+  loop at itab assigning <f>.
+
+    <f>-total_amount = <f>-prod_amount + <f>-raw_amount + <f>-dl_amount + <f>-doh_amount +
+                       <f>-am_amount   + <f>-en_amount  + <f>-il_amount + <f>-ioh_amount +
+                       <f>-st_amount   + <f>-janebi     + <f>-enteghalli.
+
+    if <f>-wemng <> 0.
+      <f>-actual_rate = ( <f>-raw_amount + <f>-dl_amount + <f>-doh_amount + <f>-am_amount  + <f>-janebi +
+                          <f>-en_amount  + <f>-il_amount + <f>-ioh_amount ) / <f>-wemng.
+    endif.
+
+    if <f>-stprs <> 0 and <f>-actual_rate <> 0.
+      <f>-dif_perc = ( <f>-stprs - <f>-actual_rate ) * '100' / <f>-stprs.
+    endif.
+
+  endloop.
+
+
+endform.
+
+form after_query_period .
+
+*-------------------------------------------------General data
+
+  loop at itab assigning field-symbol(<f>).
+    select single af~matnr, mk~maktx, mr~zmaktx_fa, mr~meins, af~amein, "af~wemng,
+                  af~dauat, af~psmng, af~dwerk, tw~bwkey, mb~stprs, mb~bklas, mb~vmvpr
+      from afpo as af
+      left join makt  as mk on af~matnr eq mk~matnr and mk~spras eq 'E'
+      left join mara  as mr on af~matnr eq mr~matnr
+      left join t001w as tw on tw~werks eq af~dwerk
+      left join mbew  as mb on mb~matnr eq af~matnr and mb~bwkey eq tw~bwkey
+      into ( @<f>-matnr, @<f>-maktx, @<f>-zmaktx_fa, @<f>-meins, @<f>-amein, "@<f>-wemng,
+             @<f>-dauat, @<f>-psmng, @<f>-dwerk, @<f>-bwkey , @<f>-stprs, @<f>-bklas, @<f>-vmvpr )
+      where af~aufnr = @<f>-aufnr.
+  endloop.
+
+
+*-------------------------------------------------Prod amount
+
+  loop at itab assigning <f>.
+
+    select single sum( msl ) as wemng, sum( acd~hsl ) as prod_amount
+      from acdoca as acd
+      into ( @<f>-wemng,  @<f>-prod_amount )
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  =  @<f>-poper
+          and aufnr  =  @<f>-aufnr
+          and blart  in ( 'WA', 'WE' )    "Document Type
+          and ktosl = 'GBB'    "Transaction
+          and co_belkz = 'L'.  "Dr/Cr Ind. CO
+
+    <f>-wemng = <f>-wemng * '-1'.
+
+  endloop.
+
+*-------------------------------------------------Janebi
+
+  loop at itab assigning <f>.
+
+
+    select single sum( acd~hsl ) as janebi
+      from acdoca as acd
+      into @<f>-janebi
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  =  @<f>-poper
+          and aufnr  =  @<f>-aufnr
+          and blart in ( 'WA', 'WE' )    "Document Type
+          and ktosl  = 'GBB'     "Transaction
+          and co_belkz = 'S'   "Dr/Cr Ind. CO
+          and racct between '8000000000' and '8999999999'.
+
+  endloop.
+
+*-------------------------------------------------Raw Material
+
+  loop at itab assigning <f>.
+
+
+    select single sum( acd~hsl ) as raw_amount
+      from acdoca as acd
+      into @<f>-raw_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  =  @<f>-poper
+          and aufnr  =  @<f>-aufnr
+          and blart in ( 'WA', 'WE' )    "Document Type
+          and ktosl  = 'GBB'     "Transaction
+          and co_belkz = 'S'   "Dr/Cr Ind. CO
+          and racct between '7000000000' and '7999999999'.
+
+  endloop.
+
+*-------------------------------------------------DLABOR
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as dl_amount
+      from acdoca as acd
+      into @<f>-dl_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper   = @<f>-poper
+          and aufnr   = @<f>-aufnr
+          and blart   = 'CO'      "Document Type
+          and ktosl   = 'CO1'     " Transaction
+          and ulstar  = 'DLABOR'.
+
+  endloop.
+
+*-------------------------------------------------DOVERH
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as doh_amount
+      from acdoca as acd
+      into @<f>-doh_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  =  @<f>-poper
+          and aufnr  =  @<f>-aufnr
+          and blart  = 'CO'      "Document Type
+          and ktosl  = 'CO1'     " Transaction
+          and ulstar = 'DOVERH'.
+
+  endloop.
+
+*-------------------------------------------------AMORTI
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as am_amount
+      from acdoca as acd
+      into @<f>-am_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  =  @<f>-poper
+          and aufnr  =  @<f>-aufnr
+          and blart  = 'CO'      "Document Type
+          and ktosl  = 'CO1'     " Transaction
+          and ulstar = 'AMORTI'.
+
+  endloop.
+
+*-------------------------------------------------ENERGY
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as en_amount
+      from acdoca as acd
+      into @<f>-en_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  =  @<f>-poper
+          and aufnr  =  @<f>-aufnr
+          and blart  = 'CO'      "Document Type
+          and ktosl  = 'CO1'     " Transaction
+          and ulstar = 'ENERGY'.
+
+  endloop.
+
+*-------------------------------------------------ILABOR
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as il_amount
+      from acdoca as acd
+      into @<f>-il_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  =  @<f>-poper
+          and aufnr  =  @<f>-aufnr
+          and blart  = 'CO'      "Document Type
+          and ktosl  = 'CO1'     " Transaction
+          and ulstar = 'ILABOR'.
+
+  endloop.
+
+*-------------------------------------------------IOVERH
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as ioh_amount
+      from acdoca as acd
+      into @<f>-ioh_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  =  @<f>-poper
+          and aufnr  =  @<f>-aufnr
+          and blart  = 'CO'      "Document Type
+          and ktosl  = 'CO1'     " Transaction
+          and ulstar = 'IOVERH'. "Dr/Cr Ind. CO
+
+  endloop.
+
+*------------------------------------------------- انتقالب از اوردر به اوردر
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as enteghalli
+      from acdoca as acd
+      into @<f>-enteghalli
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  =  @<f>-poper
+          and aufnr  =  @<f>-aufnr
+          and blart  = 'CO'      "Document Type
+          and ktosl  = 'CO1'     " Transaction
+          and co_belkz in ( 'A' , 'S' )   "Dr/Cr Ind. CO
+          and PACCASTY = 'OR' .           "Partner Object Type
+
+  endloop.
+
+
+*-------------------------------------------------ST_AMOUNT
+
+  loop at itab assigning <f>.
+
+    select single sum( acd~hsl ) as st_amount
+      from acdoca as acd
+      into @<f>-st_amount
+      where   rldnr = '0L'
+          and rbukrs in @s_rbukrs
+          and gjahr  in @s_gjahr
+          and poper  =  @<f>-poper
+          and aufnr  =  @<f>-aufnr
+          and blart  = 'ST'      "Document Type
+          and ktosl  = 'GBB' .   " Transaction
+
+  endloop.
+
+*-------------------------------------------------TOTAL_AMOUNT
+
+  loop at itab assigning <f>.
+
+    <f>-total_amount = <f>-prod_amount + <f>-raw_amount + <f>-dl_amount + <f>-doh_amount +
+                       <f>-am_amount   + <f>-en_amount  + <f>-il_amount + <f>-ioh_amount +
+                       <f>-st_amount   + <f>-janebi     + <f>-enteghalli.
+
+    if <f>-wemng <> 0.
+      <f>-actual_rate = ( <f>-raw_amount + <f>-dl_amount + <f>-doh_amount + <f>-am_amount  +
+                          <f>-en_amount  + <f>-il_amount + <f>-ioh_amount ) / <f>-wemng.
+    else.
+
+    endif.
+
+    if <f>-stprs <> 0 and <f>-actual_rate <> 0.
+      <f>-dif_perc = ( <f>-stprs - <f>-actual_rate ) * '100' / <f>-stprs.
+    endif.
+
+  endloop.
+
+
+endform.

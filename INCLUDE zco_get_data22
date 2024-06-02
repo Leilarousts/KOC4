@@ -1,0 +1,190 @@
+*&---------------------------------------------------------------------*
+*& Include          ZCO_GET_DATA22
+*&---------------------------------------------------------------------*
+FORM pre_get_data.
+  CLEAR itab_auf.
+  SELECT DISTINCT bukrs, aufnr
+    FROM matdoc
+    INTO CORRESPONDING FIELDS OF TABLE @itab_auf
+    WHERE bwart IN ( '261', '262', '101', '102', '531', '532' )
+    AND aufnr <> ''
+    AND bukrs IN @s_rbukrs
+    AND budat IN @s_budat
+    AND aufnr IN @s_aufnr.
+
+  IF sy-subrc = 0.
+*    delete adjacent duplicates from itab_auf.
+    SORT itab_auf BY aufnr.
+  ELSE.
+  ENDIF.
+
+ENDFORM.
+
+FORM get_data2.
+*----------------------------------------------------------
+  CLEAR itab.
+
+  LOOP AT itab_auf ASSIGNING FIELD-SYMBOL(<a>).
+
+    SELECT DISTINCT rbukrs, gjahr, aufnr , rhcur
+      FROM acdoca
+      APPENDING  CORRESPONDING FIELDS OF TABLE @itab
+      WHERE rldnr = '0L'
+      AND aufnr <> ''
+      AND autyp  = '10'          "Order category: PP
+      AND kokrs  IN @s_kokrs
+      AND rbukrs =  @<a>-bukrs
+      AND gjahr  IN @s_gjahr
+      AND aufnr  =  @<a>-aufnr
+      AND aufnr  IN @s_aufnr.
+
+  ENDLOOP.
+
+  IF sy-subrc = 0.
+    SORT itab BY kokrs rbukrs gjahr aufnr.
+  ELSE.
+
+  ENDIF.
+
+ENDFORM.
+*-------------------------------------------------------------------------
+FORM get_data_period2.
+
+  CLEAR itab.
+
+  LOOP AT itab_auf ASSIGNING FIELD-SYMBOL(<b>).
+    SELECT DISTINCT rbukrs, gjahr, poper, aufnr, rhcur
+      FROM acdoca
+      APPENDING CORRESPONDING FIELDS OF TABLE @itab
+      WHERE rldnr = '0L'
+      AND aufnr  <> ''
+      AND autyp  = '10'          "Order category: PP
+      AND kokrs  IN @s_kokrs
+      AND rbukrs = @<b>-bukrs
+      AND gjahr  IN @s_gjahr
+      AND aufnr  = @<b>-aufnr
+      AND aufnr  IN @s_aufnr.
+  ENDLOOP.
+
+  IF sy-subrc = 0.
+    SORT itab BY kokrs rbukrs gjahr aufnr poper.
+  ELSE.
+  ENDIF.
+
+ENDFORM.
+
+*&----------------------------------------------------- Order Status
+
+FORM order_status .
+
+  TYPES: BEGIN OF stat_stru,
+           objnr      TYPE jest-objnr,
+           status     TYPE tj02t-txt04,
+           speci_stat TYPE tj02t-txt04,
+         END OF stat_stru.
+
+  DATA: stat_itab TYPE TABLE OF stat_stru WITH HEADER LINE,
+        count     TYPE i,
+        a         TYPE i.
+
+  LOOP AT itab ASSIGNING  FIELD-SYMBOL(<c>).
+
+    CONCATENATE 'OR' <c>-aufnr INTO <c>-objnr1.
+
+    CLEAR stat_itab.
+    READ TABLE stat_itab WITH KEY objnr  = <c>-objnr1.
+    IF sy-subrc <> 0.
+
+      SELECT DISTINCT jest~objnr, tj02t~txt04 AS status
+        FROM jest
+        INNER JOIN tj02 ON tj02~istat EQ jest~stat AND tj02~nodis = @space
+        INNER JOIN tj02t ON tj02t~istat EQ tj02~istat AND tj02t~spras = @sy-langu
+        APPENDING CORRESPONDING FIELDS OF TABLE @stat_itab
+        WHERE jest~objnr = @<c>-objnr1
+        AND jest~inact <> 'X'.
+    ENDIF.
+
+
+    count = sy-dbcnt.
+    a = 1.
+    WHILE  a <= count.
+
+      LOOP AT stat_itab  ASSIGNING FIELD-SYMBOL(<f>) WHERE objnr EQ <c>-objnr1.
+
+        IF <f>-status EQ 'REL' OR <f>-status EQ 'CLSD' OR <f>-status EQ 'TECO'.
+          stat_itab-speci_stat = <f>-status.
+          a = a + 1.
+        ELSE.
+          IF a = 1.
+            <c>-status2 = <f>-status.
+          ELSE.
+            CONCATENATE <c>-status2 <f>-status INTO <c>-status2  SEPARATED BY space.
+          ENDIF.
+          a = a + 1.
+        ENDIF.
+      ENDLOOP.
+
+    ENDWHILE.
+    IF a = count + 1.
+      CONCATENATE stat_itab-speci_stat <c>-status2 INTO <c>-status2 SEPARATED BY space.
+    ENDIF.
+  ENDLOOP.
+
+ENDFORM.
+
+
+*------------------------------------------------------- Order Long Text
+FORM order_long_text .
+
+  DATA: BEGIN OF tlinetab OCCURS 100.
+          INCLUDE STRUCTURE tline.
+        DATA: END OF tlinetab.
+  DATA: tline2 TYPE tline-tdline.
+
+
+  DATA: BEGIN OF tdheader OCCURS 100.
+          INCLUDE STRUCTURE thead.
+        DATA: END OF tdheader.
+  DATA: name       TYPE stxh-tdname.
+
+  LOOP AT itab ASSIGNING FIELD-SYMBOL(<g>).
+
+    CONCATENATE sy-mandt <g>-aufnr INTO name.
+
+    CLEAR tlinetab[].
+    CALL FUNCTION 'READ_TEXT'
+      EXPORTING
+        id                      = 'KOPF'
+        language                = sy-langu
+        object                  = 'AUFK'
+        name                    = name
+      IMPORTING
+        header                  = tdheader
+      TABLES
+        lines                   = tlinetab
+      EXCEPTIONS
+        id                      = 1
+        language                = 2
+        name                    = 3
+        not_found               = 4
+        object                  = 5
+        reference_check         = 6
+        wrong_access_to_archive = 7
+        OTHERS                  = 8.
+
+*    break roostal.
+
+    CLEAR tline2.
+    LOOP AT tlinetab.
+      CONCATENATE  tline2 tlinetab-tdline INTO tline2 SEPARATED BY space.
+    ENDLOOP.
+
+    IF tline2 IS NOT INITIAL.
+      <g>-order_lg_tx = tline2.
+    ELSE.
+      SELECT SINGLE ktext FROM aufk INTO <g>-order_lg_tx WHERE aufnr EQ <g>-aufnr.
+    ENDIF.
+
+  ENDLOOP.
+
+ENDFORM.

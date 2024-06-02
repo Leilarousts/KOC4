@@ -1,0 +1,118 @@
+*&---------------------------------------------------------------------*
+*& Include          ZCO_ZKOC4N_HEAD2
+*&---------------------------------------------------------------------*
+tables: acdoca, makt, mara, afpo, mbew, t001w, matdoc, jest, tj02, tj02t, stxh, aufk.
+
+types: begin of stru_main,
+         kokrs            type acdoca-kokrs,   "Controlling Area
+         rbukrs           type acdoca-rbukrs,  "Company Code
+         dwerk            type afpo-dwerk,     "Plant
+         gjahr            type acdoca-gjahr,   "Fiscal Year
+         poper            type acdoca-poper,   "Period
+         aufnr            type acdoca-aufnr,   "Order
+         matnr            type afpo-matnr,     "material number
+         maktx            type makt-maktx,     "Item Desc
+         zmaktx_fa        type mara-zmaktx_fa, "Persian Desc
+         meins            type mara-meins,     "UOM
+         amein            type afpo-amein,     "Order UOM
+         psmng            type afpo-psmng,     "Plan Qty
+         wemng            type afpo-wemng,     "Confirmed Qty
+         dauat            type afpo-dauat,     "Order Type
+         stprs            type mbew-stprs,     "Standard price
+         bklas            type mbew-bklas,     "Valuation Class
+         vmvpr            type mbew-vmvpr,     "Price control
+         bwkey            type t001w-bwkey,    "Valuation Area
+         prod_amount      type acdoca-hsl,     "Production Amount
+         confirm_amt      type acdoca-hsl,     "Confirm Amount
+         raw_amount       type acdoca-hsl,     "Raw Amount
+         dl_amount        type acdoca-hsl,     "Direct Labor Amount
+         il_amount        type acdoca-hsl,     "Indirect Labor Amount
+         en_amount        type acdoca-hsl,     "energy Amount
+         am_amount        type acdoca-hsl,     "Amorti Amount
+         doh_amount       type acdoca-hsl,     "direct Overhead Amount
+         ioh_amount       type acdoca-hsl,     "indirect Overhead Amount
+         st_amount        type acdoca-hsl,     "Settlement Amount
+         total_amount     type acdoca-hsl,     "Total Amount
+         rhcur            type acdoca-rhcur,   "Currency
+         txt04            type tj02t-txt04,    "Order Status
+         objnr            type jest-objnr,     " 'OR' + Order Number
+         objnr1           type jest-objnr,
+         status2(40)      type c,              "Order Status
+         order_lg_tx(132) type c,              "Order Long Text
+         janebi           type acdoca-hsl,     "janebi Amount
+         actual_rate      type mbew-stprs,     "Standard price
+         dif_perc         type p decimals 2,   "درصد اختلاف
+         enteghalli       type acdoca-hsl,     "انتقال از اوردر به اوردر
+       end of stru_main.
+
+
+data: itab type table of stru_main with header line.
+
+types: begin of stru_auf,
+         bukrs type matdoc-bukrs,
+         aufnr type matdoc-aufnr,
+       end of stru_auf.
+data: itab_auf type table of stru_auf.
+
+
+
+
+selection-screen: begin of block b1 with frame title text-001.
+selection-screen skip 1.
+select-options: s_kokrs  for acdoca-kokrs no intervals no-extension default 1000,
+                s_rbukrs for acdoca-rbukrs,
+                s_gjahr  for acdoca-gjahr no intervals no-extension OBLIGATORY DEFAULT '2023',
+                s_aufnr  for acdoca-aufnr.
+
+selection-screen end of block b1.
+
+
+selection-screen: begin of block b2 with frame title text-002.
+
+selection-screen skip 1.
+parameters : period radiobutton group r1 user-command period default 'X'.
+select-options: s_poper for acdoca-poper.
+
+selection-screen skip 1.
+parameters : date radiobutton group r1 .
+select-options: s_budat for acdoca-budat.
+
+selection-screen end of block b2.
+
+
+selection-screen: begin of block b3 with frame title text-003.
+
+parameters:by_prd as checkbox."  default 'X'.
+parameters:long_txt as checkbox.
+
+selection-screen end of block b3.
+
+data: gt_fieldcat type slis_t_fieldcat_alv,
+      gv_lines    type i,
+      gs_layout   type slis_layout_alv.
+
+
+*----------------------------- HIDE RADIOBUTTON--------------------------
+
+at selection-screen output.
+  loop at screen.
+    if screen-name cs 'S_POPER'.
+      if period = 'X'.
+        screen-active = 1.
+      else.
+        screen-active = 0.
+      endif.
+      modify screen.
+    endif.
+  endloop.
+
+  loop at screen.
+    if screen-name cs 's_budat'.
+      if date = 'X'.
+        screen-active = 1.
+      else.
+        screen-active = 0.
+      endif.
+      modify screen.
+    endif.
+  endloop.

@@ -1,0 +1,43 @@
+*&---------------------------------------------------------------------*
+*& Report ZCO_ZKOC4_2
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZCO_ZKOC4_2.
+
+INCLUDE zco_zkoc4n_head2.
+
+START-OF-SELECTION.
+  IF date = 'X'.
+    PERFORM pre_get_data.
+    IF by_prd = 'X'.
+      PERFORM get_data_period2.
+      PERFORM after_query_period.
+    ELSE.
+      PERFORM get_data2.
+      PERFORM after_query.
+    ENDIF.
+  ELSEIF period = 'X'.
+    IF by_prd = 'X'.
+      PERFORM get_data_period.
+      PERFORM after_query_period.
+    ELSE.
+      PERFORM get_data.
+      PERFORM after_query.
+    ENDIF.
+  ENDIF.
+  PERFORM order_status.
+  IF long_txt = 'X'.
+    PERFORM order_long_text.
+  ENDIF.
+
+
+
+end-of-selection.
+  PERFORM create_fieldcat2 USING gt_fieldcat[].
+  PERFORM build_layout2    USING gs_layout.
+  PERFORM display2.
+
+  INCLUDE zco_zkoc4n_get_data2.
+  INCLUDE zco_get_data22.
+  INCLUDE zco_koc4n2.

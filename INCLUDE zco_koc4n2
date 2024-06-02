@@ -1,0 +1,320 @@
+*&---------------------------------------------------------------------*
+*& Include          ZCO_KOC4N2
+*&---------------------------------------------------------------------*
+FORM create_fieldcat2  USING it_fieldcat TYPE slis_t_fieldcat_alv.
+
+  DATA var TYPE slis_fieldcat_alv.
+
+  clear var.
+  var-fieldname = 'RBUKRS'.
+  var-ref_fieldname = 'RBUKRS'.
+  var-ref_tabname = 'ACDOCA'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'DWERK'.
+  var-ref_fieldname = 'DWERK'.
+  var-ref_tabname = 'AFPO'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'GJAHR'.
+  var-ref_fieldname = 'GJAHR'.
+  var-ref_tabname = 'ACDOCA'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'POPER'.
+  var-ref_fieldname = 'POPER'.
+  var-ref_tabname = 'ACDOCA'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'MATNR'.
+  var-ref_fieldname = 'MATNR'.
+  var-ref_tabname = 'AFPO'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'MAKTX'.
+  var-ref_fieldname = 'MAKTX'.
+  var-ref_tabname = 'MAKT'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'ZMAKTX_FA'.
+  var-ref_fieldname = 'ZMAKTX_FA'.
+  var-ref_tabname = 'MARA'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'AUFNR'.
+  var-ref_fieldname = 'AUFNR'.
+  var-ref_tabname = 'ACDOCA'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'DAUAT'.
+  var-ref_fieldname = 'DAUAT'.
+  var-ref_tabname = 'AFPO'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'PSMNG'.
+  var-ref_fieldname = 'PSMNG'.
+  var-ref_tabname = 'AFPO'.
+  var-qfieldname = 'MEINS'.
+  var-qtabname =  'AFPO'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'Plan Qty'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'WEMNG'.
+  var-ref_fieldname = 'WEMNG'.
+  var-ref_tabname = 'AFPO'.
+  var-qfieldname = 'MEINS'.
+  var-qtabname =  'AFPO'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'AMEIN'.
+  var-ref_fieldname = 'AMEIN'.
+  var-ref_tabname = 'AFPO'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'MEINS'.
+  var-ref_fieldname = 'MEINS'.
+  var-ref_tabname = 'MARA'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'STPRS'.
+  var-ref_fieldname = 'STPRS'.
+  var-ref_tabname = 'MBEW'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C110'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'BKLAS'.
+  var-ref_fieldname = 'BKLAS'.
+  var-ref_tabname = 'MBEW'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'VMVPR'.
+  var-ref_fieldname = 'VMVPR'.
+  var-ref_tabname = 'MBEW'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'PROD_AMOUNT'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'Prod Amount'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C400'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'JANEBI'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'جانبي توليد'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C400'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'RAW_AMOUNT'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'Raw Amount'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C500'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'DL_AMOUNT'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'DLABOR'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C700'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'DOH_AMOUNT'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'DOVERH'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C700'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'AM_AMOUNT'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'AMORTI'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C700'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'EN_AMOUNT'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'ENERGY'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C700'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'IL_AMOUNT'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'ILABOR'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C700'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'IOH_AMOUNT'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'IOVERH'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C700'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'ENTEGHALLI'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'انتقالي'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C750'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'ST_AMOUNT'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'Settlement'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C300'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'TOTAL_AMOUNT'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'Total Amount'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C600'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'OBJNR1'.
+  var-ref_fieldname = 'OBJNR'.
+  var-ref_tabname = 'JEST'.
+  var-no_out = 'X'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'STATUS2'.
+  var-datatype = 'CHAR'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'Status'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'ORDER_LG_TX'.
+*  var-ref_fieldname = 'TDLINE'.
+*  var-ref_tabname = 'TLINE'.
+  var-datatype = 'CHAR(132)'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'Long Text'.
+  append var to it_fieldcat.
+
+
+  clear var.
+  var-fieldname = 'ACTUAL_RATE'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'نرخ واقعي توليد'.
+  var-cfieldname = 'RHCUR'.
+  var-datatype = 'CURR'.
+  var-emphasize = 'C110'.
+  append var to it_fieldcat.
+
+  clear var.
+  var-fieldname = 'DIF_PERC'.
+  var-seltext_s = var-seltext_m = var-seltext_l = 'درصد تغيير'.
+  var-emphasize = 'C100'.
+  append var to it_fieldcat.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form BUILD_LAYOUT2
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_GS_LAYOUT  text
+*&---------------------------------------------------------------------*
+FORM build_layout2  USING   p_gs_layout TYPE slis_layout_alv.
+
+  p_gs_layout-zebra = 'X'.                   " خروجي راه راه باشد.
+  p_gs_layout-colwidth_optimize = 'X'.       "سايز ستونها
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DISPLAY2
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display2 .
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+*     I_INTERFACE_CHECK  = ' '
+*     I_BYPASSING_BUFFER = ' '
+*     I_BUFFER_ACTIVE    = ' '
+      i_callback_program = sy-repid
+*     I_CALLBACK_PF_STATUS_SET          = ' '
+*     I_CALLBACK_USER_COMMAND           = ' '
+*     I_CALLBACK_TOP_OF_PAGE            = ' '
+*     I_CALLBACK_HTML_TOP_OF_PAGE       = ' '
+*     I_CALLBACK_HTML_END_OF_LIST       = ' '
+*     I_STRUCTURE_NAME   =
+*     I_BACKGROUND_ID    = ' '
+*     I_GRID_TITLE       =
+*     I_GRID_SETTINGS    =
+      is_layout          = gs_layout
+      it_fieldcat        = gt_fieldcat[]
+*     IT_EXCLUDING       =
+*     IT_SPECIAL_GROUPS  =
+*     IT_SORT            =
+*     IT_FILTER          =
+*     IS_SEL_HIDE        =
+*     I_DEFAULT          = 'X'
+*     I_SAVE             = ' '
+*     IS_VARIANT         =
+*     IT_EVENTS          =
+*     IT_EVENT_EXIT      =
+*     IS_PRINT           =
+*     IS_REPREP_ID       =
+*     I_SCREEN_START_COLUMN             = 0
+*     I_SCREEN_START_LINE               = 0
+*     I_SCREEN_END_COLUMN               = 0
+*     I_SCREEN_END_LINE  = 0
+*     I_HTML_HEIGHT_TOP  = 0
+*     I_HTML_HEIGHT_END  = 0
+*     IT_ALV_GRAPHICS    =
+*     IT_HYPERLINK       =
+*     IT_ADD_FIELDCAT    =
+*     IT_EXCEPT_QINFO    =
+*     IR_SALV_FULLSCREEN_ADAPTER        =
+* IMPORTING
+*     E_EXIT_CAUSED_BY_CALLER           =
+*     ES_EXIT_CAUSED_BY_USER            =
+    TABLES
+      t_outtab           = itab
+    EXCEPTIONS
+      program_error      = 1
+      OTHERS             = 2.
+  IF sy-subrc <> 0.
+* IMPLEMENT SUITABLE ERROR HANDLING HERE
+  ENDIF.
+
+ENDFORM.
